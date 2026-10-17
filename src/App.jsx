@@ -1,7 +1,9 @@
 function App() {
   return (
     <>
-      <h1 className="text-red-950">Hello World!</h1>
+      <h1 className="text-red-950">
+        Crossfire Game Day • CSSC University of Ruhuna
+      </h1>
     </>
   );
 }
