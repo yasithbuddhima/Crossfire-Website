@@ -5,7 +5,7 @@ import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Home from "./pages/Home";
-import { AdminRoute, TeamRoute } from "./components/ProtectedRoute";
+import { AdminRoute, AuthRoute, TeamRoute } from "./components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminLayout from "./pages/admin/AdminLayout";
@@ -24,8 +24,22 @@ function App() {
       <Routes>
         {/* Public */}
         <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        <Route
+          path="/login"
+          element={
+            <AuthRoute>
+              <Login />
+            </AuthRoute>
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            <AuthRoute>
+              <Register />
+            </AuthRoute>
+          }
+        />
 
         {/* Team */}
         <Route
