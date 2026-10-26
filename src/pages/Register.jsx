@@ -1,89 +1,159 @@
 import { useState } from "react";
-import { signUpWithEmail } from "../services/auth";
+import { HandleTeamRegistration } from "../services/RegistrationServices";
+
+const memberFields = [
+  { key: "member1", label: "Member 1" },
+  { key: "member2", label: "Member 2" },
+  { key: "member3", label: "Member 3" },
+  { key: "member4", label: "Member 4" },
+];
+
+const initialFormData = {
+  teamUsername: "",
+  password: "",
+  leaderName: "",
+  leaderEmail: "",
+  leaderRegNo: "",
+  leaderContact: "",
+  member1Name: "",
+  member1Email: "",
+  member1RegNo: "",
+  member1Contact: "",
+  member2Name: "",
+  member2Email: "",
+  member2RegNo: "",
+  member2Contact: "",
+  member3Name: "",
+  member3Email: "",
+  member3RegNo: "",
+  member3Contact: "",
+  member4Name: "",
+  member4Email: "",
+  member4RegNo: "",
+  member4Contact: "",
+};
 
 function Register() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [formData, setFormData] = useState(initialFormData);
+  const [slip, setSlip] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  // !
-  // ! Add Other Details too
-  // !
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
 
+  const updateField = (event) => {
+    const { name, value } = event.target;
+    setFormData((current) => ({ ...current, [name]: value }));
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setError("");
+
+    if (!slip) {
+      setError("Please upload the payment slip.");
+      return;
+    }
+
+    setLoading(true);
     try {
-      const user = signUpWithEmail(email, password);
-      console.log("Successfully created user:", user.uid);
-      //TODO: Redirect user
+      await HandleTeamRegistration({ ...formData, slip });
     } catch (err) {
-      // Provide error message based on the Firebase error code
       if (err.code === "auth/email-already-in-use") {
         setError("This email address is already registered.");
       } else if (err.code === "auth/weak-password") {
         setError("Password should be at least 6 characters.");
       } else if (err.code === "auth/invalid-email") {
         setError("Please enter a valid email address.");
+      } else if (err.code === "auth/username-already-in-use") {
+        setError("This team name is already registered.");
       } else {
-        setError("Failed to create an account. Please try again.");
+        setError(
+          err.message || "Failed to register the team. Please try again.",
+        );
       }
-      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
+  const renderPersonFields = (prefix, label) => (
+    <fieldset style={{ marginBottom: "1rem" }}>
+      <legend>{label}</legend>
+      <input
+        name={`${prefix}Name`}
+        placeholder="Full name"
+        value={formData[`${prefix}Name`]}
+        onChange={updateField}
+        required
+      />
+      <input
+        name={`${prefix}Email`}
+        type="email"
+        placeholder="Email"
+        value={formData[`${prefix}Email`]}
+        onChange={updateField}
+        required
+      />
+      <input
+        name={`${prefix}RegNo`}
+        placeholder="Student registration number"
+        value={formData[`${prefix}RegNo`]}
+        onChange={updateField}
+        required
+      />
+      <input
+        name={`${prefix}Contact`}
+        type="tel"
+        placeholder="Contact number"
+        value={formData[`${prefix}Contact`]}
+        onChange={updateField}
+        required
+      />
+    </fieldset>
+  );
+
   return (
-    <div
-      style={{
-        maxWidth: "400px",
-        margin: "2rem auto",
-        padding: "1rem",
-        border: "1px solid #ccc",
-        borderRadius: "8px",
-      }}
-    >
+    <main style={{ maxWidth: "600px", margin: "2rem auto", padding: "1rem" }}>
       <h2>Register Team</h2>
       {error && <p style={{ color: "red" }}>{error}</p>}
-
-      <form onSubmit={handleLogin}>
-        <div style={{ marginBottom: "1rem" }}>
-          <label style={{ display: "block", marginBottom: "0.5rem" }}>
-            Email Address
-          </label>
+      <form onSubmit={handleSubmit}>
+        <fieldset>
+          <legend>Team details</legend>
           <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            name="teamUsername"
+            placeholder="Team name"
+            value={formData.teamUsername}
+            onChange={updateField}
             required
-            style={{ width: "100%", padding: "0.5rem" }}
           />
-        </div>
-
-        <div style={{ marginBottom: "1rem" }}>
-          <label style={{ display: "block", marginBottom: "0.5rem" }}>
-            Password
-          </label>
           <input
+            name="password"
             type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            minLength="6"
+            placeholder="Password"
+            value={formData.password}
+            onChange={updateField}
             required
-            style={{ width: "100%", padding: "0.5rem" }}
           />
-        </div>
+        </fieldset>
 
-        <button
-          type="submit"
-          disabled={loading}
-          style={{ width: "100%", padding: "0.75rem", cursor: "pointer" }}
-        >
-          {loading ? "Signing in..." : "Sign In"}
+        {renderPersonFields("leader", "Team leader")}
+        {memberFields.map(({ key, label }) => renderPersonFields(key, label))}
+
+        <label>
+          Payment slip
+          <input
+            type="file"
+            accept="image/*,.pdf"
+            onChange={(event) => setSlip(event.target.files?.[0] || null)}
+            required
+          />
+        </label>
+
+        <button type="submit" disabled={loading}>
+          {loading ? "Registering..." : "Register team"}
         </button>
       </form>
-    </div>
+    </main>
   );
 }
 
