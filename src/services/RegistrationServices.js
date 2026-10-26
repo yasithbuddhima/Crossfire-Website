@@ -2,6 +2,7 @@ import { doc, setDoc } from "firebase/firestore";
 import { Team } from "../models/Team";
 import { registerTeam } from "./auth";
 import { db } from "../firebase";
+import { uploadFile } from "./FileServices";
 
 export async function HandleTeamRegistration(formData) {
   if (!(formData.slip instanceof File)) {
@@ -17,12 +18,11 @@ export async function HandleTeamRegistration(formData) {
 
   const teamID = user.uid;
 
-  // TODO: Upload the slip to supabase
-  // get paymentSlipURL
+  const paymentSlipURL = await uploadFile(formData.slip, teamID);
 
   // Create a new Team
   const teamInstance = Team.fromFormState(formData, teamID);
-  //   teamInstance.paymentSlipURL = paymentSlipURL;
+  teamInstance.paymentSlipURL = paymentSlipURL;
 
   await setDoc(doc(db, "teamData", teamID), teamInstance.toJSON());
   return teamInstance;
